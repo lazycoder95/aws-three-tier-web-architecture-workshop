@@ -4,6 +4,8 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const os = require('os');
 const fetch = require('node-fetch');
+const { pool, deleteTransactionById } = require('./TransactionService');
+const { deleteAllTransactions } = require('./TransactionService');
 
 const app = express();
 const port = 4000;
@@ -19,6 +21,10 @@ app.use(cors());
 app.get('/health',(req,res)=>{
     res.json("This is the health check");
 });
+app.get("/api/test", (req, res) => {
+    res.json({ message: "Backend is working!" });
+});
+
 
 // ADD TRANSACTION
 app.post('/transaction', (req,res)=>{
@@ -65,16 +71,17 @@ app.delete('/transaction',(req,res)=>{
 });
 
 //DELETE ONE TRANSACTION
-app.delete('/transaction/id', (req,res)=>{
-    try{
-        //probably need to do some kind of parameter checking
-        transactionService.deleteTransactionById(req.body.id, function(result){
-            res.statusCode = 200;
-            res.json({message: `transaction with id ${req.body.id} seemingly deleted`});
-        })
-    } catch (err){
-        res.json({message:"error deleting transaction", error: err.message});
-    }
+app.delete('/transaction/:id', (req, res) => {
+    const id = req.params.id;
+    
+    pool.query(`DELETE FROM transactions WHERE id = ?`, [id], (err, result) => {
+        if (err) {
+            console.error("Error deleting transaction:", err);
+            res.status(500).json({ error: "Error deleting transaction" });
+        } else {
+            res.json({ message: `Transaction with ID ${id} deleted successfully` });
+        }
+    });
 });
 
 //GET SINGLE TRANSACTION
@@ -94,6 +101,6 @@ app.get('/transaction/id',(req,res)=>{
     }
 });
 
-  app.listen(port, () => {
-    console.log(`AB3 backend app listening at http://localhost:${port}`)
+  app.listen(port, "0.0.0.0", () => {
+    console.log(`AB3 backend app listening at http://backend:${port}`)
   })
