@@ -1,0 +1,51 @@
+version: '3.3'
+services:
+  mysql:
+    image: "mysql:8"
+    container_name: mysql-db
+    command: --init-file /data/application/init.sql
+    volumes:
+        - mysql_data:/var/lib/mysql
+        - ./init.sql:/data/application/init.sql
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpassword
+      - MYSQL_DATABASE=mydatabase
+      - MYSQL_USER=myuser
+      - MYSQL_PASSWORD=mypassword
+    ports:
+      - 3306:3306
+    networks:
+      - my_app_network
+
+
+  frontend:
+    build: ./web-tier
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    environment:
+      - REACT_APP_BACKEND_URL=http://backend:4000
+    networks:
+      - my_app_network
+
+  backend:
+    build: ./app-tier
+    depends_on:
+      - mysql
+    ports:
+      - "4000:4000"
+    environment:
+      - REACT_APP_FRONTEND_URL=http://frontend:3000
+      - DB_HOST=mysql  # Matches the MySQL container name
+      - DB_PORT=3306
+      - DB_USER=myuser
+      - DB_PASSWORD=mypassword
+      - DB_DATABASE=mydatabase
+    networks:
+      - my_app_network
+networks:
+  my_app_network:
+    external: true
+volumes:
+  mysql_data:
