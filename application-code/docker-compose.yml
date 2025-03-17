@@ -15,7 +15,7 @@ services:
     ports:
       - 3306:3306
     networks:
-      - my_app_network
+      - 3tier_app
 
 
   frontend:
@@ -27,7 +27,7 @@ services:
     environment:
       - REACT_APP_BACKEND_URL=http://backend:4000
     networks:
-      - my_app_network
+      - 3tier_app
 
   backend:
     build: ./app-tier
@@ -43,9 +43,8 @@ services:
       - DB_PASSWORD=mypassword
       - DB_DATABASE=mydatabase
     networks:
-      - my_app_network
+      - 3tier_app
 networks:
-  my_app_network:
-    external: true
+  3tier_app:
 volumes:
   mysql_data:
